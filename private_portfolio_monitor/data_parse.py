@@ -63,35 +63,43 @@ def get_historyline(history):
     return tradingdays, vseries, aseries, bseries
 
 def get_snapshot(pos):
+    # load information
     cash, secpos = pos
     barTime = get_minute_bar()
+    yesterday = sorted(os.listdir(POSITION_FILE_PATH))[-2].split('.')[0]
     
+    # get yesterday's initial benchmark, portfolio value and securities' prices
+    ini_b = DataAPI.MktIdxdGet(indexID='000300.ZICN', beginDate=yesterday, endDate=yesterday, field=['closeIndex']).at[0, 'closeIndex']
+
+    df_yesterday = DataAPI.MktEqudGet(secID=secpos.keys(), beginDate=yesterday, endDate=yesterday, field=['secID', 'closePrice']) 
+    ltcpshot = dict(zip(df_yesterday['secID'], df_yesterday['closePrice']))
+    ini_v = cash + sum(am*ltcpshot[sec] for sec,am in secpos.items())
+
+    # get today's newest benchmark, portfolio value and securities' prices
     clsp, secname = {}, {}
     for sec in secpos:
         df = DataAPI.MktBarRTIntraDayGet(securityID=sec)
         clsp[sec] = df['closePrice'].tolist()
         secname[sec] = df.at[0, 'shortNM'].decode('utf8')
-    
+    clspshot = {sec:p[-1] for sec,p in clsp.items()}
+
     vseries = []
     for i in range(len(clsp[sec])):
         v = cash
         for sec, am in secpos.items():
             v += am * clsp[sec][i]
         vseries.append(v)    
-    aseries = [v/vseries[0]-1 for v in vseries]
+    aseries = [v/ini_v-1 for v in vseries]
 
     cur_t = barTime[len(vseries)-1] 
-    ini_v = vseries[0]
     cur_v = vseries[-1]
     
     bseries = DataAPI.MktBarRTIntraDayGet(securityID='000300.XSHG')['closePrice'].tolist()
-    ini_b = bseries[0]
     cur_b = bseries[-1]
-    bseries = [b/bseries[0]-1 for b in bseries]
-    
+    bseries = [b/ini_b-1 for b in bseries]
+
+    # filling with nan    
     for s in [aseries, bseries]:
         s += [np.nan] * (len(barTime) - len(s))
     
-    opnpshot = {sec:p[0] for sec,p in clsp.items()}
-    clspshot = {sec:p[-1] for sec,p in clsp.items()}
-    return (cur_t, ini_v, cur_v, ini_b, cur_b), (barTime, aseries, bseries), (secname, secpos, opnpshot, clspshot)
+    return (cur_t, ini_v, cur_v, ini_b, cur_b), (barTime, aseries, bseries), (secname, secpos, ltcpshot, clspshot)

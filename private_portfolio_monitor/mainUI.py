@@ -120,15 +120,15 @@ class PortfolioMonitor(QtGui.QWidget):
             self.label_binfo.setStyleSheet(loss_style_ptf)
         
     def set_portfolio_details(self, prices_necessary):
-        secname, secpos, opnpshot, clspshot = prices_necessary
+        secname, secpos, ltcpshot, clspshot = prices_necessary
         for sec,am in secpos.items():
             i = self.secidxmap[sec]
             sinfo = u'    {0}  {1} {2:7.0f} {3:10.2f} {4:9.2f} {5:8.2f}%' \
                    .format(sec, secname[sec], am, clspshot[sec], 
-                           clspshot[sec]-opnpshot[sec], 
-                           100.*(clspshot[sec]/opnpshot[sec]-1))
+                           clspshot[sec]-ltcpshot[sec], 
+                           100.*(clspshot[sec]/ltcpshot[sec]-1))
             self.seclabels[i].setText(sinfo)
-            if clspshot[sec]-opnpshot[sec] >= 0:
+            if clspshot[sec]-ltcpshot[sec] >= 0:
                 self.seclabels[i].setStyleSheet(profit_style_sec)
             else:
                 self.seclabels[i].setStyleSheet(loss_style_sec)
