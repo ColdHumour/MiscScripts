@@ -52,28 +52,27 @@ def evaluate(pos, dt):
     cash, secpos = pos
     df = DataAPI.MktEqudGet(secID=secpos.keys(), beginDate=dt, endDate=dt, field=['secID', 'closePrice']) 
     price = dict(zip(df['secID'], df['closePrice']))             
-    return cash + sum(am*price[sec] for sec,am in secpos.items())
+    return cash + sum(am*price[sec] for sec,am in secpos.items()), price
 
 def get_historyline(history):
     tradingdays = history.keys()
     vseries = [evaluate(pos, dt) for dt,pos in history.items()]
+    ltcpshot = vseries[-1][-1]
+    vseries = [p[0] for p in vseries]
+    ini_v = vseries[-1]
     aseries = [v/vseries[0]-1 for v in vseries]
     bseries = DataAPI.MktIdxdGet(indexID='000300.ZICN', beginDate=tradingdays[0], endDate=tradingdays[-1], field=['closeIndex'])['closeIndex'].tolist()
+    ini_b = bseries[-1]
     bseries = [b/bseries[0]-1 for b in bseries]
-    return tradingdays, vseries, aseries, bseries
+    return (ini_v, ini_b, ltcpshot), (tradingdays, vseries, aseries, bseries)
 
-def get_snapshot(pos):
+def get_snapshot(pos, baseinfo):
     # load information
     cash, secpos = pos
     barTime = get_minute_bar()
-    yesterday = sorted(os.listdir(POSITION_FILE_PATH))[-2].split('.')[0]
     
-    # get yesterday's initial benchmark, portfolio value and securities' prices
-    ini_b = DataAPI.MktIdxdGet(indexID='000300.ZICN', beginDate=yesterday, endDate=yesterday, field=['closeIndex']).at[0, 'closeIndex']
-
-    df_yesterday = DataAPI.MktEqudGet(secID=secpos.keys(), beginDate=yesterday, endDate=yesterday, field=['secID', 'closePrice']) 
-    ltcpshot = dict(zip(df_yesterday['secID'], df_yesterday['closePrice']))
-    ini_v = cash + sum(am*ltcpshot[sec] for sec,am in secpos.items())
+    # get yesterday's info
+    ini_v, ini_b, ltcpshot  = baseinfo
 
     # get today's newest benchmark, portfolio value and securities' prices
     clsp, secname = {}, {}

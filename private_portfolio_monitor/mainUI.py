@@ -36,6 +36,13 @@ class PortfolioMonitor(QtGui.QWidget):
         self.loadLayout()
                 
     def loadWidgets(self):
+        fig_history = plt.figure()
+        self.canvas_history = FigureCanvas(fig_history)
+        self.ax_history_ret = fig_history.add_subplot(121, axisbg='white')
+        self.ax_history_val = fig_history.add_subplot(122, axisbg='white')
+        plt.subplots_adjust(top=0.9, bottom=0.1, left=0.1, right=0.95, wspace=0.3)
+        self.draw_history()
+
         self.grb_snapshot = GroupBox()
         self.label_time = QtGui.QLabel()
         self.label_pinfo = QtGui.QLabel()
@@ -44,7 +51,7 @@ class PortfolioMonitor(QtGui.QWidget):
         self.connect(self.refresh_btn, QtCore.SIGNAL('clicked()'), self.load_snapshot)
         
         self.grb_pdetails = GroupBox('Portfolio Details')
-        self.label_title = QtGui.QLabel(u'      证券代码   证券简称  持有数量  当前价格  当日涨跌  当日收益')
+        self.label_title = QtGui.QLabel(u'      证券代码   证券简称  持有数量  当前价格  当日收益  总体涨跌')
         cash, secpos = get_current_position()
         self.seclist = secpos.keys()
         self.secidxmap = {sec:i for i,sec in enumerate(self.seclist)}
@@ -55,13 +62,6 @@ class PortfolioMonitor(QtGui.QWidget):
         self.ax_snapshot = fig_snapshot.add_subplot(111, axisbg='white')
         self.load_snapshot()
 
-        fig_history = plt.figure()
-        self.canvas_history = FigureCanvas(fig_history)
-        self.ax_history_ret = fig_history.add_subplot(121, axisbg='white')
-        self.ax_history_val = fig_history.add_subplot(122, axisbg='white')
-        plt.subplots_adjust(top=0.9, bottom=0.1, left=0.1, right=0.95, wspace=0.3)
-        self.draw_history()
-        
     def loadLayout(self):
         self.setWindowTitle('Private Portfolio Monitor')
         self.resize(750, 780+len(self.seclist)*30)
@@ -94,7 +94,7 @@ class PortfolioMonitor(QtGui.QWidget):
         self.setLayout(layout)
     
     def load_snapshot(self):
-        values, series, shots = get_snapshot(get_current_position())
+        values, series, shots = get_snapshot(get_current_position(), self.baseinfo)
         self.set_snapshot_labels(values)
         self.draw_snapshot(series)
         self.set_portfolio_details(shots)
@@ -123,10 +123,10 @@ class PortfolioMonitor(QtGui.QWidget):
         secname, secpos, ltcpshot, clspshot = prices_necessary
         for sec,am in secpos.items():
             i = self.secidxmap[sec]
-            sinfo = u'    {0}  {1} {2:7.0f} {3:10.2f} {4:9.2f} {5:8.2f}%' \
+            sinfo = u'    {0}  {1} {2:7.0f} {3:10.2f} {4:8.2f}% {5:9.2f}' \
                    .format(sec, secname[sec], am, clspshot[sec], 
-                           clspshot[sec]-ltcpshot[sec], 
-                           100.*(clspshot[sec]/ltcpshot[sec]-1))
+                           100.*(clspshot[sec]/ltcpshot[sec]-1),
+                           am*(clspshot[sec]-ltcpshot[sec]))
             self.seclabels[i].setText(sinfo)
             if clspshot[sec]-ltcpshot[sec] >= 0:
                 self.seclabels[i].setStyleSheet(profit_style_sec)
@@ -154,7 +154,7 @@ class PortfolioMonitor(QtGui.QWidget):
         self.canvas_snapshot.draw()
     
     def draw_history(self):
-        tradingdays, vseries, aseries, bseries = get_historyline(get_history_position())
+        self.baseinfo, (tradingdays, vseries, aseries, bseries) = get_historyline(get_history_position())
         xseries = range(len(tradingdays))
         xlabels = [t[-4:] for t in tradingdays]
         pct = lambda x,_: '{0:1.1f}%'.format(100*x)
