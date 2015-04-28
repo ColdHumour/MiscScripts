@@ -36,6 +36,8 @@ class PortfolioMonitor(QtGui.QWidget):
         self.loadLayout()
                 
     def loadWidgets(self):
+        get_current_position()
+        
         fig_history = plt.figure()
         self.canvas_history = FigureCanvas(fig_history)
         self.ax_history_ret = fig_history.add_subplot(121, axisbg='white')
