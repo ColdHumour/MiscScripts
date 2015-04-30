@@ -165,10 +165,14 @@ class PortfolioMonitor(QtGui.QWidget):
         self.ax_history_ret.plot(xseries, aseries, label='portfolio', linewidth=1.0, color='r')
         self.ax_history_ret.plot(xseries, bseries, label='benchmark', linewidth=1.0, color='b')
         
+        if len(xseries) > 5:
+            tseries = xseries[::len(xseries)/5+1]
+            tlabels = xlabels[::len(xseries)/5+1]
+        
         self.ax_history_ret.yaxis.set_major_formatter(FuncFormatter(pct))
         self.ax_history_ret.set_xlim(0, len(xseries)-1)
-        self.ax_history_ret.set_xticks(xseries)
-        self.ax_history_ret.set_xticklabels(xlabels)
+        self.ax_history_ret.set_xticks(tseries)
+        self.ax_history_ret.set_xticklabels(tlabels)
         self.ax_history_ret.set_title('Cumulative Return')
         self.ax_history_ret.grid(True)
         self.ax_history_ret.legend(loc=2, prop={'size':10})
@@ -176,8 +180,8 @@ class PortfolioMonitor(QtGui.QWidget):
         self.ax_history_val.clear()
         self.ax_history_val.plot(xseries, vseries, label='portfolio', linewidth=1.0, color='r')
         self.ax_history_val.set_xlim(0, len(xseries)-1)
-        self.ax_history_val.set_xticks(xseries)
-        self.ax_history_val.set_xticklabels(xlabels)
+        self.ax_history_val.set_xticks(tseries)
+        self.ax_history_val.set_xticklabels(tlabels)
         self.ax_history_val.set_title('Portfolio Value')
         self.ax_history_val.grid(True)
         
