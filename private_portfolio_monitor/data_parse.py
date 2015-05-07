@@ -80,6 +80,8 @@ def get_snapshot(pos, baseinfo):
         df = DataAPI.MktBarRTIntraDayGet(securityID=sec)
         clsp[sec] = df['closePrice'].tolist()
         secname[sec] = df.at[0, 'shortNM'].decode('utf8')
+        if sec not in ltcpshot:
+            ltcpshot[sec] = df.at[0, 'openPrice']
     clspshot = {sec:p[-1] for sec,p in clsp.items()}
 
     vseries = []
