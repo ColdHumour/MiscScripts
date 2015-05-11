@@ -31,7 +31,7 @@ class GroupBox(QtGui.QGroupBox):
 
 class PortfolioMonitor(QtGui.QWidget):
     def __init__(self):
-        super(PortfolioMonitor, self).__init__()        
+        super(PortfolioMonitor, self).__init__()
         self.loadWidgets()
         self.loadLayout()
                 
