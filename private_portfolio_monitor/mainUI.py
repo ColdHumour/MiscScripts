@@ -126,7 +126,7 @@ class PortfolioMonitor(QtGui.QWidget):
         for sec,am in secpos.items():
             i = self.secidxmap[sec]
             sinfo = u'    {0}  {1} {2:7.0f} {3:10.2f} {4:8.2f}% {5:9.2f}' \
-                   .format(sec, secname[sec], am, clspshot[sec], 
+                   .format(sec, secname[sec] + u'　'*(4-len(secname[sec])), am, clspshot[sec], 
                            100.*(clspshot[sec]/ltcpshot[sec]-1),
                            am*(clspshot[sec]-ltcpshot[sec]))
             self.seclabels[i].setText(sinfo)

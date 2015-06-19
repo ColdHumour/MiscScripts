@@ -85,11 +85,12 @@ def get_snapshot(pos, baseinfo):
     clspshot = {sec:p[-1] for sec,p in clsp.items()}
 
     vseries = []
-    for i in range(len(clsp[sec])):
+    d = max(map(len, clsp.values()))
+    for i in range(d):
         v = cash
         for sec, am in secpos.items():
-            v += am * clsp[sec][i]
-        vseries.append(v)    
+            v += am * clsp[sec][min(len(clsp[sec])-1, i)]
+        vseries.append(v)
     aseries = [v/ini_v-1 for v in vseries]
 
     cur_t = barTime[len(vseries)-1] 
@@ -104,3 +105,6 @@ def get_snapshot(pos, baseinfo):
         s += [np.nan] * (len(barTime) - len(s))
     
     return (cur_t, ini_v, cur_v, ini_b, cur_b), (barTime, aseries, bseries), (secname, secpos, ltcpshot, clspshot)
+
+if __name__=="__main__":
+    print get_current_position()
