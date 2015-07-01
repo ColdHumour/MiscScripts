@@ -50,6 +50,7 @@ def get_current_position():
 
 def evaluate(pos, dt):
     cash, secpos = pos
+    if not secpos: return cash, {}
     df = DataAPI.MktEqudGet(secID=secpos.keys(), beginDate=dt, endDate=dt, field=['secID', 'closePrice']) 
     price = dict(zip(df['secID'], df['closePrice']))             
     return cash + sum(am*price[sec] for sec,am in secpos.items()), price
@@ -84,8 +85,12 @@ def get_snapshot(pos, baseinfo):
             ltcpshot[sec] = df.at[0, 'openPrice']
     clspshot = {sec:p[-1] for sec,p in clsp.items()}
 
+    bseries = DataAPI.MktBarRTIntraDayGet(securityID='000300.XSHG')['closePrice'].tolist()
+    cur_b = bseries[-1]
+    bseries = [b/ini_b-1 for b in bseries]
+
     vseries = []
-    d = max(map(len, clsp.values()))
+    d = len(bseries)
     for i in range(d):
         v = cash
         for sec, am in secpos.items():
@@ -96,10 +101,6 @@ def get_snapshot(pos, baseinfo):
     cur_t = barTime[len(vseries)-1] 
     cur_v = vseries[-1]
     
-    bseries = DataAPI.MktBarRTIntraDayGet(securityID='000300.XSHG')['closePrice'].tolist()
-    cur_b = bseries[-1]
-    bseries = [b/ini_b-1 for b in bseries]
-
     # filling with nan    
     for s in [aseries, bseries]:
         s += [np.nan] * (len(barTime) - len(s))

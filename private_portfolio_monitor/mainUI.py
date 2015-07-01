@@ -80,7 +80,7 @@ class PortfolioMonitor(QtGui.QWidget):
         self.grb_snapshot.addWidget(self.label_pinfo, 1, 0, 1, -1)
         self.grb_snapshot.addWidget(self.label_binfo, 2, 0, 1, -1)
         
-        self.grb_pdetails.setFixedHeight(30+len(self.seclist)*30)
+        self.grb_pdetails.setFixedHeight(100 if len(self.seclist) < 3 else 30+len(self.seclist)*30)
         self.grb_pdetails.setFont(QtGui.QFont('Consolas', 12))
         self.grb_pdetails.addWidget(self.label_title, 0, 0, 1, 1)
         self.label_title.setStyleSheet(title_style)
