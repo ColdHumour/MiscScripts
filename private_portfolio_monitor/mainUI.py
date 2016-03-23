@@ -164,7 +164,7 @@ class PortfolioMonitor(QtGui.QWidget):
         self.ax_history_ret.clear()
         self.ax_history_ret.plot(xseries, aseries, label='portfolio', linewidth=1.0, color='r')
         self.ax_history_ret.plot(xseries, bseries, label='benchmark', linewidth=1.0, color='b')
-        
+
         if len(xseries) > 5:
             tseries = xseries[::len(xseries)/5+1]
             tlabels = xlabels[::len(xseries)/5+1]
