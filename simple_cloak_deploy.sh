@@ -1,8 +1,10 @@
 #!/bin/bash
 num_regex='^[0-9]+$'
+
 function GetRandomPort() {
     PORT=$((RANDOM % 16383 + 49152))
 }
+
 function ShowConnectionInfo() {
     echo "Your Server IP: $PUBLIC_IP"
     echo "Password:       $Password"
@@ -38,6 +40,7 @@ function ShowConnectionInfo() {
     echo
     echo "Or just use this string: $SERVER_BASE64"
 }
+
 function PreAdminConsolePrint() {
     clear
     echo "$(tput setaf 3)PLEASE READ THIS BEFORE CONTINUING$(tput sgr 0)"
@@ -221,14 +224,8 @@ if [ -d "/etc/shadowsocks-libev" ]; then
         esac
         ;;
     3)
-        if [[ $distro =~ "CentOS" ]]; then
-            echo "firewall-cmd --add-port=$PORT/tcp"
-            echo "firewall-cmd --permanent --add-port=$PORT/tcp"
-        elif [[ $distro =~ "Ubuntu" ]]; then
+        if [[ $distro =~ "Ubuntu" ]]; then
             echo "ufw allow $PORT/tcp"
-        elif [[ $distro =~ "Debian" ]]; then
-            echo "iptables -A INPUT -p tcp --dport $PORT --jump ACCEPT"
-            echo "iptables-save"
         fi
         ;;
     4)
@@ -238,17 +235,9 @@ if [ -d "/etc/shadowsocks-libev" ]; then
             systemctl disable shadowsocks-server
             rm -f /etc/systemd/system/shadowsocks-server.service
             systemctl daemon-reload
-            if [[ $distro =~ "CentOS" ]]; then
-                yum -y remove shadowsocks-libev
-                firewall-cmd --remove-port="$PORT"/tcp
-                firewall-cmd --permanent --remove-port="$PORT"/tcp
-            elif [[ $distro =~ "Ubuntu" ]]; then
+            if [[ $distro =~ "Ubuntu" ]]; then
                 apt-get -y purge shadowsocks-libev
                 ufw delete allow "$PORT"/tcp
-            elif [[ $distro =~ "Debian" ]]; then
-                apt-get -y purge shadowsocks-libev
-                iptables -D INPUT -p tcp --dport "$PORT" --jump ACCEPT
-                iptables-save >/etc/iptables/rules.v4
             fi
             rm -rf /etc/shadowsocks-libev
             rm -f /usr/local/bin/ck-server
@@ -260,7 +249,7 @@ if [ -d "/etc/shadowsocks-libev" ]; then
     esac
     exit 0
 fi
-ciphers=(rc4-md5 aes-128-gcm aes-192-gcm aes-256-gcm aes-128-cfb aes-192-cfb aes-256-cfb aes-128-ctr aes-192-ctr aes-256-ctr camellia-128-cfb camellia-192-cfb camellia-256-cfb bf-cfb chacha20-ietf-poly1305 xchacha20-ietf-poly1305 salsa20 chacha20 chacha20-ietf)
+ciphers=(rc4-md5 aes-128-gcm aes-192-gcm aes-256-gcm aes-128-cfb aes-192-cfb aes-256-cfb aes-128-ctr aes-192-ctr aes-256-ctr)
 clear
 echo "Shadowsocks with Cloak installer by Hirbod Behnam"
 echo "Source at https://github.com/HirbodBehnam/Shadowsocks-Cloak-Installer"
@@ -289,21 +278,13 @@ if [ "$Password" == "" ]; then
     echo "$Password was chosen."
 fi
 #Get cipher
-default_port=15
-if [[ $distro =~ "Debian" ]]; then
-    ver=$(cat /etc/debian_version)
-    ver="${ver:0:1}"
-    if [ "$ver" == "8" ]; then
-        default_port=2
-        ciphers=(rc4-md5 aes-128-cfb aes-192-cfb aes-256-cfb aes-128-ctr aes-192-ctr aes-256-ctr bf-cfb camellia-128-cfb camellia-192-cfb camellia-256-cfb salsa20 chacha20)
-    fi
-fi
+default_port=4
 echo
 for ((i = 0; i < ${#ciphers[@]}; i++)); do
     echo "$((i + 1))) ${ciphers[$i]}"
 done
 read -r -p "Enter the number of cipher you want to use: " -e -i $default_port cipher
-if [ "$cipher" -lt 1 ] || [ "$cipher" -gt 18 ]; then
+if [ "$cipher" -lt 1 ] || [ "$cipher" -gt 10 ]; then
     echo "$(tput setaf 1)Error:$(tput sgr 0) Invalid option"
     exit 1
 fi
@@ -333,10 +314,10 @@ case $dns in
     exit 1
     ;;
 esac
-#Set redirect ip for cloak; Just like https://gist.github.com/cbeuw/37a9d434c237840d7e6d5e497539c1ca#file-shadowsocks-ck-release-sh-L165
-echo -e "Please enter a redirection IP for Cloak (leave blank to set it to 204.79.197.200:443 of bing.com): "
+# Set redirect ip for cloak; Just like https://gist.github.com/cbeuw/37a9d434c237840d7e6d5e497539c1ca#file-shadowsocks-ck-release-sh-L165
+echo -e "Please enter a redirection IP for Cloak (leave blank to set it to 202.89.233.100:443 of bing.com): "
 read -r -p "" ckwebaddr
-[ -z "$ckwebaddr" ] && ckwebaddr="204.79.197.200:443"
+[ -z "$ckwebaddr" ] && ckwebaddr="202.89.233.100:443"
 #Check arch
 arch=$(uname -m)
 case $arch in
@@ -385,32 +366,9 @@ case $arch in
     exit 1
     ;;
 esac
-#Install shadowsocks
-if [[ $distro =~ "CentOS" ]]; then
-    yum -y install epel-release yum-utils
-    yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo
-    yum -y install shadowsocks-libev wget jq qrencode curl haveged
-    SETFIREWALL=true
-    if ! yum -q list installed firewalld &>/dev/null; then
-        echo
-        read -r -p "Looks like \"firewalld\" is not installed Do you want to install it?(y/n) " -e -i "y" OPTION
-        OPTION="$(echo $OPTION | tr '[A-Z]' '[a-z]')"
-        case $OPTION in
-        "y" | "Y")
-            yum -y install firewalld
-            systemctl enable firewalld
-            ;;
-        *)
-            SETFIREWALL=false
-            ;;
-        esac
-    fi
-    if [ "$SETFIREWALL" = true ]; then
-        systemctl start firewalld
-        firewall-cmd --zone=public --add-port="$PORT"/tcp
-        firewall-cmd --runtime-to-permanent
-    fi
-elif [[ $distro =~ "Ubuntu" ]]; then
+
+# Install shadowsocks
+if [[ $distro =~ "Ubuntu" ]]; then
     if [[ $(lsb_release -r -s) =~ "18" ]] || [[ $(lsb_release -r -s) =~ "19" ]]; then
         apt update
         apt -y install shadowsocks-libev wget jq qrencode curl haveged
@@ -446,47 +404,24 @@ elif [[ $distro =~ "Ubuntu" ]]; then
             ;;
         esac
     fi
-elif [[ $distro =~ "Debian" ]]; then
-    ver=$(</etc/debian_version)
-    ver="${ver%.*}"
-    if [ "$ver" == "8" ]; then
-        sh -c 'printf "deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list' #https://unix.stackexchange.com/a/508728/331589
-        echo "Acquire::Check-Valid-Until \"false\";" >>/etc/apt/apt.conf
-        apt-get update
-        apt -y -t jessie-backports install shadowsocks-libev
-    elif [ "$ver" == "9" ]; then
-        sh -c 'printf "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
-        apt update
-        apt -t stretch-backports install shadowsocks-libev
-    elif [ "$ver" == "10" ]; then
-        sh -c 'printf "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
-        apt update
-        apt -t buster-backports install shadowsocks-libev
-    else
-        echo "Your debian is too old!"
-        exit 2
-    fi
-    apt -y install wget jq qrencode curl iptables-persistent iptables haveged
-    #Firewall
-    iptables -A INPUT -p tcp --dport "$PORT" --jump ACCEPT
-    iptables-save >/etc/iptables/rules.v4
 else
     echo "Your system is not supported (yet)"
     exit 2
 fi
 
-#Install cloak https://gist.github.com/cbeuw/37a9d434c237840d7e6d5e497539c1ca#file-shadowsocks-ck-release-sh-L118
+# Install cloak https://github.com/cbeuw/Cloak/releases
 url=$(wget -O - -o /dev/null https://api.github.com/repos/cbeuw/Cloak/releases/latest | grep "/ck-server-linux-$arch-" | grep -P 'https(.*)[^"]' -o)
 wget -O ck-server "$url"
 chmod +x ck-server
 mv ck-server /usr/local/bin
 
-#Install cloak client for post install management
+# Install cloak client for post install management
 urlc=$(wget -O - -o /dev/null https://api.github.com/repos/cbeuw/Cloak/releases/latest | grep "/ck-client-linux-$arch-" | grep -P 'https(.*)[^"]' -o)
 wget -O ck-client "$urlc"
 chmod +x ck-client
 mv ck-client /usr/local/bin
-#Setup shadowsocks config
+
+# Setup shadowsocks config
 rm -f /etc/shadowsocks-libev/config.json
 echo "{
     \"server\":\"0.0.0.0\",
@@ -498,14 +433,17 @@ echo "{
     \"plugin\":\"ck-server\",
     \"plugin_opts\":\"/etc/shadowsocks-libev/ckconfig.json\"
 }" >>/etc/shadowsocks-libev/config.json
-ckauid=$(ck-server -u) #https://gist.github.com/cbeuw/37a9d434c237840d7e6d5e497539c1ca#file-shadowsocks-ck-release-sh-L139
+
+ckauid=$(ck-server -u)  # https://gist.github.com/cbeuw/37a9d434c237840d7e6d5e497539c1ca#file-shadowsocks-ck-release-sh-L139
 IFS=, read ckpub ckpv <<<$(ck-server -k)
+
 echo "{
     \"WebServerAddr\":\"$ckwebaddr\",
     \"PrivateKey\":\"$ckpv\",
     \"AdminUID\":\"$ckauid\",
     \"DatabasePath\":\"/etc/shadowsocks-libev/userinfo.db\"
 }" >>/etc/shadowsocks-libev/ckconfig.json
+
 echo "{
     \"UID\":\"$ckauid\",
     \"PublicKey\":\"$ckpub\",
@@ -515,9 +453,11 @@ echo "{
     \"EncryptionMethod\": \"plain\",
     \"BrowserSig\":\"chrome\"
 }" >>/etc/shadowsocks-libev/ckclient.json
+
 touch /etc/shadowsocks-libev/usersForScript.txt
 chmod 777 /etc/shadowsocks-libev
-#Service
+
+# Service
 rm /etc/systemd/system/shadowsocks-server.service
 echo "[Unit]
 Description=Shadowsocks-libev Server Service
@@ -534,12 +474,14 @@ WorkingDirectory=/etc/shadowsocks-libev
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 [Install]
 WantedBy=multi-user.target" >>/etc/systemd/system/shadowsocks-server.service
+
 systemctl daemon-reload
 systemctl stop shadowsocks-libev
 systemctl disable shadowsocks-libev
-systemctl start shadowsocks-server
+# systemctl start shadowsocks-server
 systemctl enable shadowsocks-server
-#Show keys server and...
+
+# Show keys server and...
 PUBLIC_IP="$(curl https://api.ipify.org -sS)"
 CURL_EXIT_STATUS=$?
 if [ $CURL_EXIT_STATUS -ne 0 ]; then

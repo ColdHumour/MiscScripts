@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-kindle_clean.py
+kindleclean.py
 
 清除不必要的书签文件夹
 
@@ -16,7 +16,7 @@ import shutil
 import subprocess
 
 
-def kindle_clean(kindlefolder):
+def kindleclean():
     errflag = 1
     for disk in  psutil.disk_partitions():
         volinfo = subprocess.check_output(["cmd", "/c vol {}".format(disk.device.strip("\\"))])
@@ -27,14 +27,23 @@ def kindle_clean(kindlefolder):
         finally:
             label = volinfo.split("\r\n")[0].split(" ").pop()
 
-        if label == "kindle":
+        if label.lower() == "kindle":
             errflag = 0
             break
 
     if errflag:
         raise ValueError("Kindle disk not found!")
 
-    kindlefolder = os.path.join(label, "documents")
+    kindlefolder = os.path.join(disk.device, "documents")
     files = os.listdir(kindlefolder)
-    ebooks = [f for f in files if f.split(".").pop() in "pdf|azw3|mobi"]
-    sdrfolders = [f for f in files if f.endswith("sdr")]
+
+    ebooks = [f.rsplit(".")[0] for f in files if f.split(".").pop() in "txt|pdf|azw3|mobi|kfx"]
+    sdrfolders = [f.rsplit(".")[0] for f in files if f.endswith("sdr")]
+    mismatch = [f for f in sdrfolders if f not in ebooks]
+    for f in mismatch:
+        shutil.rmtree(os.path.join(kindlefolder, "{}.sdr".format(f)))
+        print("{}.sdr is removed from kindle.".format(f))
+
+
+if __name__ == "__main__":
+    kindleclean()
