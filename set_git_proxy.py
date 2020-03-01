@@ -26,13 +26,13 @@ def set_git_proxy(url="127.0.0.1:1080"):
             break
 
     if not flag:
-        if data[-1]:
+        if data[-1] and not data[-1].endswith("\n"):
             data[-1] += "\n"
         data += [
             "[http]\n",
             "    proxy = http://{}\n".format(url),
             "[https]\n",
-            "    proxy = https://{}\n".format(url),
+            "    proxy = https://{}".format(url),
         ]
 
     with open(git, 'w') as file:

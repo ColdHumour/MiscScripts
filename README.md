@@ -13,6 +13,8 @@ Micellaneous scripts collection. Mostly coded by myself, while some are modified
 
 - modify_matplotlib_and_seaborn: Solve Chinese characters displayed in plots.
 
+- modify_wind_login_info: Disable string display when wind login.
+
 - set_git_proxy: Set git requests through proxy or not.
 
 - simple_cloak_deploy: shell scripts to deploy cloak on servers.
