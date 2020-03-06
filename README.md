@@ -5,6 +5,8 @@ Micellaneous scripts collection. Mostly coded by myself, while some are modified
 
 # CONTENTS
 
+- cmddict: English dictionary in command line.
+
 - kindlestrip: Resize comic mobi's.
 
 - kindleclean: Clean kindle by pairing ebooks and sdr folders.
