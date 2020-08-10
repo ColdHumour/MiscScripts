@@ -45,9 +45,15 @@ def html2pdf():
 
     br.close()
 
-    # 转换
+    # 定位文件
     file_path = os.path.join(target_folder, "{}_files".format(title))
     html_path = os.path.join(target_folder, "{}.html".format(title))
+    if not os.path.exists(html_path):
+        html_path = os.path.join(target_folder, "{}.htm".format(title))
+    if not os.path.exists(html_path):
+        raise FileNotFoundError
+
+    # 转换
     pdf_path = os.path.join(target_folder, "{}.pdf".format(title))
     os.system("wkhtmltopdf --allow \"{}\" \"{}\" \"{}\"".format(file_path, html_path, pdf_path))
 

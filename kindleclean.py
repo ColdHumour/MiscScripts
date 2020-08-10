@@ -37,8 +37,8 @@ def kindleclean():
     kindlefolder = os.path.join(disk.device, "documents")
     files = os.listdir(kindlefolder)
 
-    ebooks = [f.rsplit(".")[0] for f in files if f.split(".").pop() in "txt|pdf|azw3|mobi|kfx"]
-    sdrfolders = [f.rsplit(".")[0] for f in files if f.endswith("sdr")]
+    ebooks = [f.rsplit(".", maxsplit=1)[0] for f in files if f.split(".").pop() in "txt|pdf|azw3|mobi|kfx"]
+    sdrfolders = [f.rsplit(".", maxsplit=1)[0] for f in files if f.endswith("sdr")]
     mismatch = [f for f in sdrfolders if f not in ebooks]
     for f in mismatch:
         shutil.rmtree(os.path.join(kindlefolder, "{}.sdr".format(f)))
