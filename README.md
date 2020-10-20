@@ -13,7 +13,9 @@ Micellaneous scripts collection. Mostly coded by myself, while some are modified
 
 - modify_importlib_autoreload: Get rid of warnings when reload modules. Make it more friendly in Jupyter notebooks.
 
-- modify_matplotlib_and_seaborn: Solve Chinese characters displayed in plots.
+- modify_matplotlib: Solve Chinese characters displayed in plots.
+
+- modify_notebook_ui: Fix jupyter notebook ui in English
 
 - modify_wind_login_info: Disable string display when wind login.
 

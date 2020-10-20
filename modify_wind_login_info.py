@@ -14,11 +14,9 @@ import os
 
 
 def modify_wind_login_info():
-    info = os.popen("reg query \"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Wind\WFT\"").read()
+    info = os.popen("reg query \"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\万得信息技术有限公司\Wind金融终端\"").read()
     windpath = [line.split("  ")[-1] for line in info.split("\n")
-                if line.strip().startswith("BinDir")][0]
-    windpath = os.path.dirname(windpath)
-    windpath = os.path.dirname(windpath)
+                if line.strip().startswith("Path")][0]
     windpy = os.path.join(windpath, "x64", "WindPy.py")
     assert os.path.exists(windpy)
 
